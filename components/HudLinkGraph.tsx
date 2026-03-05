@@ -226,7 +226,6 @@ export function HudLinkGraph({
       await app.init({
         antialias: true,
         backgroundAlpha: 0,
-        resizeTo: host,
       });
       if (!mounted || !app) return;
 
@@ -239,6 +238,7 @@ export function HudLinkGraph({
         worldHeight: WORLD_HEIGHT,
         events: app.renderer.events,
       });
+      app.renderer.resize(host.clientWidth, host.clientHeight);
       viewport.drag().wheel().pinch().decelerate();
       viewport.clampZoom({ minScale: 0.5, maxScale: 2.6 });
       viewport.fitWorld(true);
@@ -253,6 +253,8 @@ export function HudLinkGraph({
       viewport.addChild(pulseLayer);
       viewport.addChild(nodeLayer);
       app.stage.addChild(viewport);
+      app.stage.eventMode = "static";
+      app.stage.hitArea = app.screen;
 
       appRef.current = app;
       viewportRef.current = viewport;
@@ -280,7 +282,8 @@ export function HudLinkGraph({
       app.ticker.add(onTick);
 
       resizeObserver = new ResizeObserver(() => {
-        if (!viewport) return;
+        if (!viewport || !app) return;
+        app.renderer.resize(host.clientWidth, host.clientHeight);
         viewport.resize(host.clientWidth, host.clientHeight, WORLD_WIDTH, WORLD_HEIGHT);
       });
       resizeObserver.observe(host);
@@ -294,7 +297,7 @@ export function HudLinkGraph({
         resizeObserver.disconnect();
       }
       if (app) {
-        app.destroy(true, { children: true });
+        app.destroy();
       }
       appRef.current = null;
       viewportRef.current = null;
@@ -311,6 +314,12 @@ export function HudLinkGraph({
     const viewport = viewportRef.current;
     const app = appRef.current;
     if (!edgeLayer || !nodeLayer || !pulseLayer || !viewport || !app) return;
+    const viewportPlugins = (viewport as unknown as { plugins?: { pause?: (name: string) => void; resume?: (name: string) => void } }).plugins;
+    if (boardLocked) {
+      viewportPlugins?.resume?.("drag");
+    } else {
+      viewportPlugins?.pause?.("drag");
+    }
 
     edgeLayer.removeChildren();
     nodeLayer.removeChildren();
@@ -459,8 +468,26 @@ export function HudLinkGraph({
       let dragActive = false;
       let dragOffsetX = 0;
       let dragOffsetY = 0;
+      const detachStageDragHandlers = () => {
+        app?.stage.off("pointermove", handleStageDragMove);
+        app?.stage.off("pointerup", endDrag);
+        app?.stage.off("pointerupoutside", endDrag);
+      };
+      const endDrag = () => {
+        dragActive = false;
+        container.cursor = boardLocked ? "pointer" : "grab";
+        detachStageDragHandlers();
+      };
+      const handleStageDragMove = (event: { global: { x: number; y: number } }) => {
+        if (!dragActive || boardLocked) return;
+        const world = viewport.toWorld(event.global);
+        const nextX = Math.max(24, Math.min(WORLD_WIDTH - 24, world.x + dragOffsetX));
+        const nextY = Math.max(24, Math.min(WORLD_HEIGHT - 24, world.y + dragOffsetY));
+        onMoveNode(node.id, nextX, nextY);
+      };
 
       container.on("pointerdown", (event) => {
+        event.stopPropagation();
         const rightClick = event.button === 2;
         if (rightClick) {
           onNodeContextMenu(node.entity, {
@@ -478,22 +505,13 @@ export function HudLinkGraph({
         dragOffsetY = node.y - world.y;
         dragActive = true;
         container.cursor = "grabbing";
+        detachStageDragHandlers();
+        app?.stage.on("pointermove", handleStageDragMove);
+        app?.stage.on("pointerup", endDrag);
+        app?.stage.on("pointerupoutside", endDrag);
       });
-      container.on("pointerup", () => {
-        dragActive = false;
-        container.cursor = boardLocked ? "pointer" : "grab";
-      });
-      container.on("pointerupoutside", () => {
-        dragActive = false;
-        container.cursor = boardLocked ? "pointer" : "grab";
-      });
-      container.on("globalpointermove", (event) => {
-        if (!dragActive || boardLocked) return;
-        const world = viewport.toWorld(event.global);
-        const nextX = Math.max(24, Math.min(WORLD_WIDTH - 24, world.x + dragOffsetX));
-        const nextY = Math.max(24, Math.min(WORLD_HEIGHT - 24, world.y + dragOffsetY));
-        onMoveNode(node.id, nextX, nextY);
-      });
+      container.on("pointerup", endDrag);
+      container.on("pointerupoutside", endDrag);
       container.on("pointerover", () => setHoveredNodeId(node.id));
       container.on("pointerout", () => setHoveredNodeId((previous) => (previous === node.id ? null : previous)));
 

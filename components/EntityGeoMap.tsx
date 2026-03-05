@@ -6,15 +6,25 @@ import type { Entity, UserRole } from "@/lib/types";
 import { maskEntityName } from "@/lib/auth";
 import { formatEntityType } from "@/lib/format";
 import { HudPanel } from "@/components/hud/HudPanel";
+import { cn } from "@/lib/utils";
 
 interface EntityGeoMapProps {
   entities: Entity[];
   role: UserRole;
   selectedEntityId: string | null;
   onSelectEntity: (entity: Entity) => void;
+  className?: string;
+  mapClassName?: string;
 }
 
-export function EntityGeoMap({ entities, role, selectedEntityId, onSelectEntity }: EntityGeoMapProps) {
+export function EntityGeoMap({
+  entities,
+  role,
+  selectedEntityId,
+  onSelectEntity,
+  className,
+  mapClassName,
+}: EntityGeoMapProps) {
   const geoEntities = entities.filter((entity) => entity.geo);
 
   if (geoEntities.length === 0) {
@@ -30,11 +40,12 @@ export function EntityGeoMap({ entities, role, selectedEntityId, onSelectEntity 
 
   return (
     <HudPanel
+      className={className}
       title="Entity Geo Map"
       subtitle="Dark tactical basemap. Click markers to sync selection with timeline and details."
     >
       <MapContainer
-        className="entity-map"
+        className={cn("entity-map", mapClassName)}
         bounds={bounds}
         center={fallbackCenter}
         zoom={12}

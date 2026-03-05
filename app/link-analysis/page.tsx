@@ -526,39 +526,57 @@ export default function LinkAnalysisPage() {
           </div>
 
           <section className="hud-bottom-strip">
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-2 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
               <div className="flex items-center gap-2">
                 <Clock3 className="h-4 w-4 text-cyan-300" />
-                <p className="hud-label">Timeline Scrubber</p>
+                <p className="hud-label">Timeline of Events</p>
               </div>
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button size="sm" variant="secondary">
-                    <PanelBottomOpen className="mr-1 h-4 w-4" />
-                    Expand Timeline
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="bottom" className="h-[70vh] overflow-auto">
-                  <SheetHeader>
-                    <SheetTitle>Full Case Timeline</SheetTitle>
-                    <SheetDescription>
-                      Detailed chronological report stream linked to entities.
-                    </SheetDescription>
-                  </SheetHeader>
-                  <div className="mt-4">
-                    <CaseTimeline
-                      reports={reportsByDate}
-                      entities={entities}
-                      role={role}
-                      selectedEntityId={selectedEntity?.id ?? null}
-                      onSelectEntity={(entity) => {
-                        setSelectedRelationship(null);
-                        setSelectedEntity(entity);
-                      }}
-                    />
-                  </div>
-                </SheetContent>
-              </Sheet>
+              <div className="flex flex-wrap items-end gap-2 lg:justify-end">
+                <label className="grid gap-1">
+                  <span className="hud-label">Start Date</span>
+                  <Input
+                    type="date"
+                    value={dateStart}
+                    onChange={(event) => setDateStart(event.target.value)}
+                  />
+                </label>
+                <label className="grid gap-1">
+                  <span className="hud-label">End Date</span>
+                  <Input
+                    type="date"
+                    value={dateEnd}
+                    onChange={(event) => setDateEnd(event.target.value)}
+                  />
+                </label>
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button size="sm" variant="secondary">
+                      <PanelBottomOpen className="mr-1 h-4 w-4" />
+                      Expand Timeline
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="bottom" className="h-[70vh] overflow-auto">
+                    <SheetHeader>
+                      <SheetTitle>Full Case Timeline</SheetTitle>
+                      <SheetDescription>
+                        Detailed chronological report stream linked to entities.
+                      </SheetDescription>
+                    </SheetHeader>
+                    <div className="mt-4">
+                      <CaseTimeline
+                        reports={reportsByDate}
+                        entities={entities}
+                        role={role}
+                        selectedEntityId={selectedEntity?.id ?? null}
+                        onSelectEntity={(entity) => {
+                          setSelectedRelationship(null);
+                          setSelectedEntity(entity);
+                        }}
+                      />
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
             </div>
             <div className="hud-timeline-strip">
               {timelineStripReports.map((report) => (
@@ -581,37 +599,6 @@ export default function LinkAnalysisPage() {
             </div>
           </section>
 
-          <div className="grid-2 mt-4">
-            <EntityGeoMap
-              entities={mapEntities}
-              role={role}
-              selectedEntityId={selectedEntity?.id ?? null}
-              onSelectEntity={(entity) => {
-                setSelectedRelationship(null);
-                setSelectedEntity(entity);
-              }}
-            />
-            <HudPanel title="Date Range Filters" subtitle="Map markers and timeline entries are constrained to this range.">
-              <div className="grid gap-3 md:grid-cols-2">
-                <label className="grid gap-1">
-                  <span className="hud-label">Start Date</span>
-                  <Input
-                    type="date"
-                    value={dateStart}
-                    onChange={(event) => setDateStart(event.target.value)}
-                  />
-                </label>
-                <label className="grid gap-1">
-                  <span className="hud-label">End Date</span>
-                  <Input
-                    type="date"
-                    value={dateEnd}
-                    onChange={(event) => setDateEnd(event.target.value)}
-                  />
-                </label>
-              </div>
-            </HudPanel>
-          </div>
         </section>
 
         <motion.aside
@@ -652,6 +639,19 @@ export default function LinkAnalysisPage() {
           </HudPanel>
         </motion.aside>
       </div>
+
+      <section>
+        <EntityGeoMap
+          entities={mapEntities}
+          role={role}
+          mapClassName="h-[520px]"
+          selectedEntityId={selectedEntity?.id ?? null}
+          onSelectEntity={(entity) => {
+            setSelectedRelationship(null);
+            setSelectedEntity(entity);
+          }}
+        />
+      </section>
 
       {contextMenu ? (
         <div
