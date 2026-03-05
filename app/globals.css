@@ -1,0 +1,444 @@
+@import "leaflet/dist/leaflet.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 55% 4%;
+    --foreground: 210 40% 98%;
+    --card: 222 45% 7%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 45% 8%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 189 94% 45%;
+    --primary-foreground: 223 54% 4%;
+    --secondary: 217 32% 15%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 28% 14%;
+    --muted-foreground: 214 20% 72%;
+    --accent: 192 77% 42%;
+    --accent-foreground: 220 45% 6%;
+    --destructive: 351 95% 65%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 215 25% 18%;
+    --input: 215 25% 18%;
+    --ring: 189 94% 45%;
+    --radius: 0.75rem;
+
+    --hud-surface: rgba(8, 12, 20, 0.62);
+    --hud-surface-2: rgba(14, 22, 36, 0.52);
+    --hud-border: rgba(148, 163, 184, 0.16);
+    --hud-glow: rgba(34, 211, 238, 0.28);
+    --hud-grid: rgba(56, 189, 248, 0.08);
+    --hud-noise-opacity: 0.05;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body {
+    @apply h-full;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    margin: 0;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -2;
+    background:
+      radial-gradient(circle at 16% 12%, rgba(34, 211, 238, 0.13), transparent 35%),
+      radial-gradient(circle at 84% 10%, rgba(56, 189, 248, 0.11), transparent 42%),
+      linear-gradient(115deg, rgba(8, 47, 73, 0.22), transparent 48%),
+      linear-gradient(to bottom, #030712, #020617 45%, #030712);
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    opacity: var(--hud-noise-opacity);
+    background-image:
+      linear-gradient(var(--hud-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--hud-grid) 1px, transparent 1px),
+      radial-gradient(circle, rgba(248, 250, 252, 0.8) 1px, transparent 1px);
+    background-size: 36px 36px, 36px 36px, 3px 3px;
+    background-position: center center, center center, left top;
+  }
+}
+
+@layer components {
+  .main-container {
+    @apply w-full p-4 md:p-6 lg:p-8;
+  }
+
+  .hud-panel {
+    @apply rounded-lg border shadow-2xl backdrop-blur-md;
+    background:
+      linear-gradient(145deg, rgba(14, 22, 36, 0.66), rgba(8, 12, 20, 0.62));
+    border-color: var(--hud-border);
+    box-shadow:
+      0 20px 45px rgba(2, 6, 23, 0.44),
+      inset 0 1px 0 rgba(148, 163, 184, 0.14);
+  }
+
+  .hud-panel-header {
+    @apply flex items-center justify-between gap-3 border-b px-4 py-3;
+    border-color: rgba(100, 116, 139, 0.3);
+  }
+
+  .hud-panel-body {
+    @apply p-4;
+  }
+
+  .hud-label {
+    @apply text-[0.68rem] uppercase tracking-[0.15em] text-muted-foreground font-semibold;
+  }
+
+  .hud-title {
+    @apply font-hud text-lg font-semibold tracking-wide;
+  }
+
+  .hud-kpi {
+    @apply rounded-md border p-3;
+    border-color: rgba(56, 189, 248, 0.24);
+    background: linear-gradient(130deg, rgba(14, 22, 36, 0.74), rgba(3, 7, 18, 0.84));
+  }
+
+  .hud-kpi-value {
+    @apply text-2xl font-hud font-semibold text-cyan-200;
+  }
+
+  .hud-kpi-label {
+    @apply text-xs uppercase tracking-[0.18em] text-muted-foreground;
+  }
+
+  .graph-shell {
+    @apply relative rounded-lg border;
+    border-color: rgba(56, 189, 248, 0.24);
+    min-height: 520px;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(34, 211, 238, 0.08), transparent 28%),
+      radial-gradient(circle at 80% 10%, rgba(99, 102, 241, 0.06), transparent 22%),
+      linear-gradient(140deg, #020617 0%, #090f1f 50%, #090e1a 100%);
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.12);
+  }
+
+  .graph-toolbar-overlay {
+    @apply absolute right-3 top-3 z-20 flex items-center gap-2 rounded-md border px-3 py-2 text-xs backdrop-blur;
+    background: rgba(5, 9, 16, 0.68);
+    border-color: rgba(148, 163, 184, 0.24);
+  }
+
+  .hud-grid-layout {
+    display: grid;
+    grid-template-columns: 340px minmax(0, 1fr) 390px;
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .hud-bottom-strip {
+    @apply mt-4 rounded-lg border p-3;
+    background: linear-gradient(180deg, rgba(14, 22, 36, 0.72), rgba(8, 12, 20, 0.58));
+    border-color: rgba(100, 116, 139, 0.34);
+  }
+
+  .hud-timeline-strip {
+    @apply flex items-center gap-2 overflow-x-auto;
+  }
+
+  .hud-timeline-pill {
+    @apply rounded-full border px-3 py-1 text-xs whitespace-nowrap transition;
+    border-color: rgba(100, 116, 139, 0.42);
+    background: rgba(2, 6, 23, 0.54);
+  }
+
+  .hud-timeline-pill.active {
+    border-color: rgba(34, 211, 238, 0.7);
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.25);
+    color: rgb(165 243 252);
+  }
+
+  .entity-context-menu {
+    @apply fixed z-[60] min-w-56 rounded-md border p-2 shadow-xl;
+    background: rgba(8, 12, 20, 0.95);
+    border-color: rgba(148, 163, 184, 0.26);
+  }
+
+  .entity-context-menu p {
+    @apply mb-1 px-2 py-1 text-sm;
+  }
+
+  .entity-context-menu button {
+    @apply mb-1 w-full rounded-md border px-2 py-1 text-left text-sm transition;
+    background: rgba(15, 23, 42, 0.85);
+    border-color: rgba(71, 85, 105, 0.6);
+  }
+
+  .entity-context-menu button:hover {
+    border-color: rgba(34, 211, 238, 0.78);
+    color: rgb(165 243 252);
+  }
+
+  .map-label {
+    font-size: 10px;
+    fill: #e2e8f0;
+    paint-order: stroke;
+    stroke: #020617;
+    stroke-width: 2px;
+  }
+
+  .entity-map {
+    @apply h-[340px] w-full overflow-hidden rounded-lg border;
+    border-color: rgba(56, 189, 248, 0.2);
+  }
+
+  .timeline-list {
+    @apply grid max-h-[340px] gap-3 overflow-auto pr-1;
+  }
+
+  .timeline-item {
+    @apply rounded-md border p-3;
+    border-color: rgba(100, 116, 139, 0.35);
+    background: rgba(8, 12, 20, 0.6);
+  }
+
+  .timeline-item.highlight {
+    border-color: rgba(34, 211, 238, 0.75);
+    box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.3) inset;
+  }
+
+  .timeline-entity-list {
+    @apply mt-2 flex flex-wrap gap-2;
+  }
+
+  .timeline-entity-chip {
+    @apply inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs;
+    border-color: rgba(100, 116, 139, 0.45);
+    background: rgba(15, 23, 42, 0.75);
+  }
+
+  .timeline-entity-chip.selected {
+    border-color: rgba(34, 211, 238, 0.7);
+    color: rgb(103 232 249);
+  }
+
+  .timeline-entity-thumb-wrap {
+    @apply inline-flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border;
+    border-color: rgba(148, 163, 184, 0.45);
+  }
+
+  .timeline-entity-thumb {
+    @apply h-full w-full object-cover;
+  }
+
+  .timeline-entity-thumb.placeholder {
+    @apply text-[9px] text-muted-foreground;
+  }
+
+  .selection-header-grid {
+    @apply grid grid-cols-[1fr_auto] gap-3;
+  }
+
+  .selection-meta-grid {
+    @apply mt-3 grid grid-cols-2 gap-2 text-sm;
+  }
+
+  .selection-editor-grid {
+    @apply mt-3 grid gap-2;
+  }
+
+  .selection-entity-image-wrap {
+    @apply h-20 w-20 overflow-hidden rounded-md border;
+    border-color: rgba(100, 116, 139, 0.5);
+  }
+
+  .selection-entity-image {
+    @apply h-full w-full object-cover;
+  }
+
+  .selection-entity-image.placeholder {
+    @apply flex h-full w-full items-center justify-center text-xs text-muted-foreground;
+    background: rgba(15, 23, 42, 0.6);
+  }
+
+  .help-fab {
+    @apply fixed bottom-5 right-5 z-50 rounded-full border px-4 py-2 text-sm font-medium;
+    border-color: rgba(34, 211, 238, 0.45);
+    background: rgba(8, 12, 20, 0.92);
+    box-shadow: 0 0 25px rgba(34, 211, 238, 0.22);
+  }
+
+  .help-overlay {
+    @apply fixed inset-0 z-[70] grid place-items-center p-6;
+    background: rgba(2, 6, 23, 0.76);
+    backdrop-filter: blur(8px);
+  }
+
+  .help-card {
+    @apply max-h-[80vh] w-full max-w-2xl overflow-auto rounded-lg border p-4 md:p-6;
+    border-color: rgba(148, 163, 184, 0.28);
+    background: rgba(8, 12, 20, 0.95);
+  }
+
+  .help-card section {
+    @apply mt-4 rounded-md border p-3;
+    border-color: rgba(71, 85, 105, 0.5);
+    background: rgba(15, 23, 42, 0.55);
+  }
+
+  .help-card h3 {
+    @apply font-hud text-xl tracking-wide;
+  }
+
+  .help-card h4 {
+    @apply mb-2 font-hud text-base tracking-wide;
+  }
+
+  .help-card ul {
+    @apply m-0 list-disc pl-6;
+  }
+
+  .help-card button {
+    @apply rounded-md border px-3 py-2 text-sm transition;
+    border-color: rgba(100, 116, 139, 0.55);
+    background: rgba(15, 23, 42, 0.65);
+  }
+
+  .help-card button:hover {
+    border-color: rgba(34, 211, 238, 0.7);
+  }
+
+  .operator-kpi-grid {
+    @apply grid gap-4 md:grid-cols-2;
+  }
+
+  .operator-ai-grid {
+    @apply grid gap-4 xl:grid-cols-[1.4fr_1fr];
+  }
+
+  .operator-entity-grid {
+    @apply grid gap-3 md:grid-cols-2 xl:grid-cols-3;
+  }
+
+  .entity-mini-card {
+    @apply relative rounded-md border p-3;
+    border-color: rgba(100, 116, 139, 0.38);
+    background: rgba(8, 12, 20, 0.56);
+  }
+
+  .entity-mini-card.selected {
+    border-color: rgba(34, 211, 238, 0.8);
+    box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.3) inset;
+  }
+
+  .entity-card-thumb-wrap {
+    @apply absolute right-3 top-3;
+  }
+
+  .entity-card-thumb,
+  .entity-card-thumb.placeholder {
+    @apply h-16 w-16 overflow-hidden rounded-md border object-cover;
+    border-color: rgba(100, 116, 139, 0.55);
+    background: rgba(15, 23, 42, 0.7);
+  }
+
+  .entity-card-thumb.placeholder {
+    @apply flex items-center justify-center text-[10px] text-muted-foreground;
+  }
+
+  .link-button {
+    @apply inline border-0 bg-transparent p-0 text-left text-cyan-300 underline-offset-4 hover:underline;
+  }
+
+  .card {
+    @apply hud-panel p-4;
+  }
+
+  .hint {
+    @apply text-sm text-muted-foreground;
+  }
+
+  .toolbar-grid {
+    @apply grid gap-3 md:grid-cols-2 xl:grid-cols-3;
+  }
+
+  .toolbar-actions {
+    @apply mt-3 flex flex-wrap gap-2;
+  }
+
+  .preset-grid {
+    @apply mt-3 grid gap-3 xl:grid-cols-5 xl:items-end;
+  }
+
+  .grid-2 {
+    @apply grid gap-4 lg:grid-cols-2;
+  }
+
+  .row {
+    @apply flex;
+  }
+
+  .between {
+    @apply justify-between;
+  }
+
+  .center {
+    @apply items-center;
+  }
+
+  .gap-sm {
+    @apply gap-2;
+  }
+
+  .gap-md {
+    @apply gap-3;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full border px-2 py-0.5 text-xs;
+    border-color: rgba(56, 189, 248, 0.35);
+    background: rgba(14, 116, 144, 0.22);
+    color: rgb(165 243 252);
+  }
+}
+
+@layer utilities {
+  .text-telemetry {
+    @apply font-mono tabular-nums;
+  }
+}
+
+@media (max-width: 1620px) {
+  .hud-grid-layout {
+    grid-template-columns: 300px minmax(0, 1fr) 340px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .hud-grid-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
