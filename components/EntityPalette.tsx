@@ -29,7 +29,7 @@ const paletteTypes: EntityType[] = [
 
 const iconAccent: Record<EntityType, string> = {
   person: "#67e8f9",
-  suspect: "#fb923c",
+  suspect: "#f97316",
   unknown_person: "#e2e8f0",
   victim: "#fbbf24",
   associate: "#93c5fd",
@@ -71,37 +71,50 @@ export function EntityPalette({ onAddEntity }: EntityPaletteProps) {
             type="button"
             variant={selectedType === type ? "default" : "secondary"}
             size="sm"
-            className="h-auto flex-col gap-1.5 border border-border/60 py-2"
+            className="group h-auto min-h-28 flex-col gap-2 overflow-hidden border border-border/60 px-2 py-3 transition-all duration-200"
+            style={{
+              background:
+                selectedType === type
+                  ? `linear-gradient(180deg, ${iconAccent[type]}22 0%, rgba(7, 12, 24, 0.96) 100%)`
+                  : "linear-gradient(180deg, rgba(30,41,59,0.55) 0%, rgba(9,14,28,0.94) 100%)",
+              boxShadow:
+                selectedType === type
+                  ? `inset 0 0 0 1px ${iconAccent[type]}66, 0 10px 24px rgba(2,6,23,0.45), 0 0 28px ${iconAccent[type]}33`
+                  : `inset 0 0 0 1px rgba(255,255,255,0.04), 0 10px 20px rgba(2,6,23,0.32)`,
+            }}
             onClick={() => setSelectedType(type)}
             title={`Use ${getEntityTypeLabel(type)} entity`}
           >
             <span
-              className="relative grid h-8 w-8 place-items-center rounded-full border border-white/25"
+              className="relative grid h-14 w-14 place-items-center overflow-hidden rounded-2xl border border-white/15 transition-transform duration-200 group-hover:scale-[1.04]"
               style={{
-                background: `radial-gradient(circle at 35% 30%, ${iconAccent[type]}55, rgba(2,6,23,.72) 70%)`,
+                background: `
+                  radial-gradient(circle at 30% 28%, rgba(255,255,255,0.22), transparent 22%),
+                  radial-gradient(circle at 50% 35%, ${iconAccent[type]}88, rgba(3,7,18,0.92) 72%)
+                `,
                 boxShadow: selectedType === type
-                  ? `0 0 16px ${iconAccent[type]}66`
-                  : `0 0 10px ${iconAccent[type]}30`,
+                  ? `inset 0 1px 0 rgba(255,255,255,0.18), 0 0 22px ${iconAccent[type]}66, 0 8px 22px rgba(2,6,23,0.55)`
+                  : `inset 0 1px 0 rgba(255,255,255,0.12), 0 0 14px ${iconAccent[type]}33, 0 8px 18px rgba(2,6,23,0.45)`,
               }}
             >
-              <svg
-                viewBox="-14 -14 28 28"
-                className="relative h-[18px] w-[18px]"
-                aria-hidden
-                style={{ color: "#f8fafc" }}
-              >
-                <g
-                  stroke="currentColor"
-                  fill="none"
-                  strokeWidth={1.8}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <EntityTypeGlyph type={type} />
-                </g>
-              </svg>
+              <span
+                className="pointer-events-none absolute inset-[5px] rounded-[14px]"
+                style={{
+                  background:
+                    "linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.01) 42%, rgba(0,0,0,0.14) 100%)",
+                }}
+              />
+              <span
+                className="pointer-events-none absolute inset-x-2 top-1 h-px"
+                style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent)" }}
+              />
+              <EntityTypeGlyph
+                type={type}
+                className="relative z-10 h-7 w-7 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.22)]"
+                strokeWidth={2.1}
+              />
             </span>
-            <span className="text-[11px]">{getEntityTypeLabel(type)}</span>
+            <span className="text-center text-[11px] leading-tight text-slate-100">{getEntityTypeLabel(type)}</span>
           </Button>
         ))}
       </div>
