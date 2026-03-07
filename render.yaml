@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: anti-human-trafficking
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    numInstances: 1
+    healthCheckPath: /api/health
+    disk:
+      name: app-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: DATA_DIR
+        value: /var/data
