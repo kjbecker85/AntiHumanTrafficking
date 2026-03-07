@@ -15,7 +15,6 @@ import {
 } from "@/lib/graph";
 import type { CaseRecord, Entity, EntityType, Relationship, ReportRecord } from "@/lib/types";
 import { CaseScopeBar } from "@/components/CaseScopeBar";
-import { GraphCanvas } from "@/components/GraphCanvas";
 import { GraphToolbar } from "@/components/GraphToolbar";
 import { SelectionPanel } from "@/components/SelectionPanel";
 import { HelpOverlay } from "@/components/HelpOverlay";
@@ -31,6 +30,11 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/components/ui/use-toast";
 import { maskEntityName } from "@/lib/auth";
+
+const GraphCanvas = dynamic(
+  () => import("@/components/GraphCanvas").then((module) => module.GraphCanvas),
+  { ssr: false },
+);
 
 const EntityGeoMap = dynamic(
   () => import("@/components/EntityGeoMap").then((module) => module.EntityGeoMap),
