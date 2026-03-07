@@ -8,6 +8,34 @@
 
 export type UserRole = "analyst" | "operator" | "supervisor";
 
+export interface UserAccount {
+  id: string;
+  displayName: string;
+  email: string;
+  passwordHash: string;
+  assignedRoles: UserRole[];
+  defaultRole: UserRole;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AuthSession {
+  token: string;
+  userId: string;
+  activeRole: UserRole;
+  createdAt: string;
+  lastAccessedAt: string;
+}
+
+export interface PasswordResetRequest {
+  token: string;
+  userId: string;
+  email: string;
+  createdAt: string;
+  expiresAt: string;
+  usedAt?: string;
+}
+
 export interface CaseRecord {
   id: string;
   name: string;
@@ -141,8 +169,12 @@ export interface AuditEvent {
 }
 
 export interface UserContext {
+  isAuthenticated: boolean;
   userId: string;
+  email: string;
+  displayName: string;
   role: UserRole;
+  assignedRoles: UserRole[];
   permissions: string[];
   compartments: string[];
 }

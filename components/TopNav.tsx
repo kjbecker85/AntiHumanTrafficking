@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useRole } from "@/components/RoleProvider";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ const navItems = [
 
 export function TopNav() {
   const pathname = usePathname();
+  const { isAuthenticated, displayName, role, logout } = useRole();
 
   return (
     <nav className="sticky top-0 z-40 border-b border-border/60 bg-background/65 px-4 py-3 backdrop-blur-lg md:px-6">
@@ -25,46 +27,63 @@ export function TopNav() {
           <Link href="/" className="font-hud text-xl font-semibold tracking-[0.08em] text-cyan-100">
             Investigation Dashboard
           </Link>
-          <Badge className="hidden lg:inline-flex">
-            <Radar className="mr-1 h-3.5 w-3.5" />
-            Active Case Context
-          </Badge>
+          {isAuthenticated ? (
+            <Badge className="hidden lg:inline-flex">
+              <Radar className="mr-1 h-3.5 w-3.5" />
+              Active Case Context
+            </Badge>
+          ) : null}
         </div>
-        <div className="hidden flex-1 items-center justify-center gap-1 xl:flex">
+        {isAuthenticated ? (
+          <div className="hidden flex-1 items-center justify-center gap-1 xl:flex">
+            {navItems.map((item) => (
+              <Button
+                key={item.href}
+                variant={pathname === item.href ? "default" : "ghost"}
+                size="sm"
+                asChild
+                className={pathname === item.href ? "" : "text-slate-300"}
+              >
+                <Link href={item.href}>{item.label}</Link>
+              </Button>
+            ))}
+          </div>
+        ) : <div className="hidden flex-1 xl:block" />}
+        <div className="flex items-center gap-2">
+          {isAuthenticated ? (
+            <>
+              <div className="hidden text-right md:block">
+                <p className="text-sm font-medium text-slate-100">{displayName}</p>
+                <p className="text-xs uppercase tracking-[0.12em] text-slate-400">{role}</p>
+              </div>
+              <RoleSwitcher />
+              <Button size="icon" variant="outline" className="hidden md:inline-flex" title="Alerts">
+                <Bell className="h-4 w-4" />
+              </Button>
+              <Button size="icon" variant="outline" className="hidden md:inline-flex" title="Command palette">
+                <Command className="h-4 w-4" />
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => void logout()}>
+                Log Out
+              </Button>
+            </>
+          ) : null}
+        </div>
+      </div>
+      {isAuthenticated ? (
+        <div className="mt-3 flex items-center gap-1 overflow-x-auto xl:hidden">
           {navItems.map((item) => (
             <Button
-              key={item.href}
+              key={`compact-${item.href}`}
               variant={pathname === item.href ? "default" : "ghost"}
               size="sm"
               asChild
-              className={pathname === item.href ? "" : "text-slate-300"}
             >
               <Link href={item.href}>{item.label}</Link>
             </Button>
           ))}
         </div>
-        <div className="flex items-center gap-2">
-          <RoleSwitcher />
-          <Button size="icon" variant="outline" className="hidden md:inline-flex" title="Alerts">
-            <Bell className="h-4 w-4" />
-          </Button>
-          <Button size="icon" variant="outline" className="hidden md:inline-flex" title="Command palette">
-            <Command className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-      <div className="mt-3 flex items-center gap-1 overflow-x-auto xl:hidden">
-        {navItems.map((item) => (
-          <Button
-            key={`compact-${item.href}`}
-            variant={pathname === item.href ? "default" : "ghost"}
-            size="sm"
-            asChild
-          >
-            <Link href={item.href}>{item.label}</Link>
-          </Button>
-        ))}
-      </div>
+      ) : null}
     </nav>
   );
 }

@@ -1,10 +1,13 @@
 ﻿import type {
   AttachmentRecord,
+  AuthSession,
   AuditEvent,
   CaseRecord,
   Entity,
+  PasswordResetRequest,
   Relationship,
   ReportRecord,
+  UserAccount,
   UserContext,
 } from "@/lib/types";
 
@@ -195,8 +198,61 @@ export const seededAuditEvents: AuditEvent[] = Array.from({ length: 50 }).map((_
 }));
 
 export const demoUserContext: UserContext = {
+  isAuthenticated: true,
   userId: "analyst-1",
+  email: "analyst@demo.local",
+  displayName: "Demo Analyst",
   role: "analyst",
+  assignedRoles: ["analyst"],
   permissions: ["case.read", "entity.read", "relationship.write", "report.read", "report.write"],
   compartments: ["general"],
 };
+
+const demoPasswordHash = "a109e36947ad56de1dca1cc49f0ef8ac9ad9a7b1aa0df41fb3c4cb73c1ff01ea";
+
+export const seededUsers: UserAccount[] = [
+  {
+    id: "analyst-1",
+    displayName: "Demo Analyst",
+    email: "analyst@demo.local",
+    passwordHash: demoPasswordHash,
+    assignedRoles: ["analyst"],
+    defaultRole: "analyst",
+    createdAt: "2026-02-01T10:00:00.000Z",
+    updatedAt: "2026-02-01T10:00:00.000Z",
+  },
+  {
+    id: "operator-1",
+    displayName: "Demo Operator",
+    email: "operator@demo.local",
+    passwordHash: demoPasswordHash,
+    assignedRoles: ["operator"],
+    defaultRole: "operator",
+    createdAt: "2026-02-01T10:05:00.000Z",
+    updatedAt: "2026-02-01T10:05:00.000Z",
+  },
+  {
+    id: "supervisor-1",
+    displayName: "Demo Supervisor",
+    email: "supervisor@demo.local",
+    passwordHash: demoPasswordHash,
+    assignedRoles: ["supervisor"],
+    defaultRole: "supervisor",
+    createdAt: "2026-02-01T10:10:00.000Z",
+    updatedAt: "2026-02-01T10:10:00.000Z",
+  },
+  {
+    id: "command-1",
+    displayName: "Command Lead",
+    email: "command@demo.local",
+    passwordHash: demoPasswordHash,
+    assignedRoles: ["analyst", "operator", "supervisor"],
+    defaultRole: "supervisor",
+    createdAt: "2026-02-01T10:15:00.000Z",
+    updatedAt: "2026-02-01T10:15:00.000Z",
+  },
+];
+
+export const seededSessions: AuthSession[] = [];
+
+export const seededPasswordResetRequests: PasswordResetRequest[] = [];

@@ -1,15 +1,55 @@
 import type { CaseRecord, Entity, OperatorAiBrief, Relationship, ReportRecord, UserContext, UserRole } from "@/lib/types";
 
-async function getJson<T>(url: string): Promise<T> {
-  const response = await fetch(url, { cache: "no-store" });
+async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, { cache: "no-store", ...init });
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status} ${response.statusText}`);
+    const payload = await response.json().catch(() => null) as { message?: string } | null;
+    throw new Error(payload?.message || `Request failed: ${response.status} ${response.statusText}`);
   }
   return (await response.json()) as T;
 }
 
 export const api = {
-  getMe: () => getJson<UserContext>("/api/v1/me"),
+  getMe: (token: string) =>
+    getJson<UserContext>("/api/v1/me", {
+      headers: { authorization: `Bearer ${token}` },
+    }),
+  signup: async (payload: { displayName: string; email: string; password: string; assignedRoles: UserRole[] }) =>
+    getJson<{ token: string; user: UserContext }>("/api/v1/auth/signup", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
+  login: async (payload: { email: string; password: string }) =>
+    getJson<{ token: string; user: UserContext }>("/api/v1/auth/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
+  logout: async (token: string) =>
+    getJson<{ ok: boolean }>("/api/v1/auth/logout", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ token }),
+    }),
+  switchRole: async (token: string, role: UserRole) =>
+    getJson<{ user: UserContext }>("/api/v1/auth/active-role", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ token, role }),
+    }),
+  requestPasswordReset: async (email: string) =>
+    getJson<{ ok: boolean; token: string | null; expiresAt: string | null; message: string }>("/api/v1/auth/forgot-password", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email }),
+    }),
+  resetPassword: async (payload: { token: string; password: string }) =>
+    getJson<{ ok: boolean }>("/api/v1/auth/reset-password", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
   getCases: () => getJson<CaseRecord[]>("/api/v1/cases"),
   createCase: async (payload: Omit<CaseRecord, "id">) => {
     const response = await fetch("/api/v1/cases", {

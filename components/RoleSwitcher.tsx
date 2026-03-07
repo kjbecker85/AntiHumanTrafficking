@@ -9,12 +9,12 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
  * Switch between Analyst and Supervisor to preview masking differences.
  */
 export function RoleSwitcher() {
-  const { role, setRole } = useRole();
+  const { role, setRole, assignedRoles, isAuthenticated } = useRole();
   const router = useRouter();
   const pathname = usePathname();
 
-  function applyRole(nextRole: "analyst" | "operator" | "supervisor") {
-    setRole(nextRole);
+  async function applyRole(nextRole: "analyst" | "operator" | "supervisor") {
+    await setRole(nextRole);
 
     // Mode-driven navigation: operator mode uses Operator View.
     if (nextRole === "operator" && pathname !== "/operator") {
@@ -25,6 +25,10 @@ export function RoleSwitcher() {
     }
   }
 
+  if (!isAuthenticated || assignedRoles.length === 0) {
+    return null;
+  }
+
   return (
     <div className="flex items-center gap-2" aria-label="Role switcher">
       <span className="hud-label hidden xl:inline">Role</span>
@@ -33,22 +37,28 @@ export function RoleSwitcher() {
         value={role}
         variant="outline"
         size="sm"
-        onValueChange={(value) => {
+        onValueChange={async (value) => {
           if (value === "analyst" || value === "operator" || value === "supervisor") {
-            applyRole(value);
+            await applyRole(value);
           }
         }}
         className="rounded-md border border-border/70 bg-secondary/30 p-1"
       >
-        <ToggleGroupItem value="analyst" aria-label="Set role analyst" title="Analyst: protected values stay masked">
-          Analyst
-        </ToggleGroupItem>
-        <ToggleGroupItem value="operator" aria-label="Set role operator" title="Operator: field-first view with mission-relevant access">
-          Operator
-        </ToggleGroupItem>
-        <ToggleGroupItem value="supervisor" aria-label="Set role supervisor" title="Supervisor: protected values are visible">
-          Supervisor
-        </ToggleGroupItem>
+        {assignedRoles.includes("analyst") ? (
+          <ToggleGroupItem value="analyst" aria-label="Set role analyst" title="Analyst: protected values stay masked">
+            Analyst
+          </ToggleGroupItem>
+        ) : null}
+        {assignedRoles.includes("operator") ? (
+          <ToggleGroupItem value="operator" aria-label="Set role operator" title="Operator: field-first view with mission-relevant access">
+            Operator
+          </ToggleGroupItem>
+        ) : null}
+        {assignedRoles.includes("supervisor") ? (
+          <ToggleGroupItem value="supervisor" aria-label="Set role supervisor" title="Supervisor: protected values are visible">
+            Supervisor
+          </ToggleGroupItem>
+        ) : null}
       </ToggleGroup>
     </div>
   );

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Inter, JetBrains_Mono, Rajdhani } from "next/font/google";
 import "./globals.css";
+import { AuthGate } from "@/components/AuthGate";
 import { TopNav } from "@/components/TopNav";
 import { RoleProvider } from "@/components/RoleProvider";
 import { Providers } from "@/app/providers";
@@ -34,7 +35,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <RoleProvider>
             <div className={`${sans.variable} ${hud.variable} ${mono.variable} min-h-screen`}>
               <TopNav />
-              <main className="main-container">{children}</main>
+              <AuthGate>
+                <main className="main-container">{children}</main>
+              </AuthGate>
             </div>
           </RoleProvider>
         </Providers>

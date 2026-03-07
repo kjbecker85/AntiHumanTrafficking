@@ -1,18 +1,32 @@
-﻿import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import {
-  demoUserContext,
   seededAttachments,
   seededAuditEvents,
   seededCases,
   seededEntities,
+  seededPasswordResetRequests,
   seededRelationships,
   seededReports,
+  seededSessions,
+  seededUsers,
 } from "@/lib/seedData";
-import type { AttachmentRecord, AuditEvent, CaseRecord, Entity, Relationship, ReportRecord, UserContext } from "@/lib/types";
+import type {
+  AttachmentRecord,
+  AuthSession,
+  AuditEvent,
+  CaseRecord,
+  Entity,
+  PasswordResetRequest,
+  Relationship,
+  ReportRecord,
+  UserAccount,
+} from "@/lib/types";
 
 export interface MockDatabase {
-  userContext: UserContext;
+  users: UserAccount[];
+  sessions: AuthSession[];
+  passwordResetRequests: PasswordResetRequest[];
   cases: CaseRecord[];
   entities: Entity[];
   relationships: Relationship[];
@@ -23,7 +37,9 @@ export interface MockDatabase {
 
 function cloneSeedState(): MockDatabase {
   return JSON.parse(JSON.stringify({
-    userContext: demoUserContext,
+    users: seededUsers,
+    sessions: seededSessions,
+    passwordResetRequests: seededPasswordResetRequests,
     cases: seededCases,
     entities: seededEntities,
     relationships: seededRelationships,
@@ -48,6 +64,29 @@ function writeDatabaseSnapshot(snapshot: MockDatabase) {
   writeFileSync(persistenceFilePath, JSON.stringify(snapshot, null, 2), "utf8");
 }
 
+function normalizeDatabase(raw: unknown): MockDatabase {
+  const seed = cloneSeedState();
+  if (!raw || typeof raw !== "object") {
+    return seed;
+  }
+
+  const candidate = raw as Partial<MockDatabase> & { userContext?: unknown };
+
+  return {
+    users: Array.isArray(candidate.users) && candidate.users.length > 0 ? candidate.users : seed.users,
+    sessions: Array.isArray(candidate.sessions) ? candidate.sessions : seed.sessions,
+    passwordResetRequests: Array.isArray(candidate.passwordResetRequests)
+      ? candidate.passwordResetRequests
+      : seed.passwordResetRequests,
+    cases: Array.isArray(candidate.cases) ? candidate.cases : seed.cases,
+    entities: Array.isArray(candidate.entities) ? candidate.entities : seed.entities,
+    relationships: Array.isArray(candidate.relationships) ? candidate.relationships : seed.relationships,
+    reports: Array.isArray(candidate.reports) ? candidate.reports : seed.reports,
+    attachments: Array.isArray(candidate.attachments) ? candidate.attachments : seed.attachments,
+    auditEvents: Array.isArray(candidate.auditEvents) ? candidate.auditEvents : seed.auditEvents,
+  };
+}
+
 function loadDatabase(): MockDatabase {
   const seededState = cloneSeedState();
   if (!persistenceFilePath) {
@@ -61,7 +100,7 @@ function loadDatabase(): MockDatabase {
     }
 
     const serialized = readFileSync(persistenceFilePath, "utf8");
-    return JSON.parse(serialized) as MockDatabase;
+    return normalizeDatabase(JSON.parse(serialized));
   } catch (error) {
     console.error("Failed to load persisted mock database. Falling back to seeded state.", error);
     return seededState;
@@ -78,12 +117,6 @@ export function persistMockDb() {
   }
 }
 
-/**
- * Mock database for API route handlers.
- *
- * By default this stays in-memory for local development.
- * When DATA_DIR is set, changes are mirrored to disk for single-instance demos.
- */
 export const mockDb = loadDatabase();
 
 export function patchRelationship(
