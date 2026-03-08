@@ -21,9 +21,10 @@ AS
 RETURN
   SELECT 1 AS fn_case_access_filter_result
   WHERE
-    IS_MEMBER('fabric-supervisors') = 1
-    OR IS_MEMBER('fabric-analysts') = 1
-    OR IS_MEMBER('fabric-operators') = 1;
+    IS_MEMBER('aht-fabric-admins') = 1
+    OR IS_MEMBER('aht-supervisors') = 1
+    OR IS_MEMBER('aht-analysts') = 1
+    OR IS_MEMBER('aht-operators') = 1;
 GO
 
 CREATE OR ALTER FUNCTION sec.fn_protected_entity_filter (@protected_flag bit)
@@ -34,7 +35,8 @@ RETURN
   SELECT 1 AS fn_protected_entity_filter_result
   WHERE
     @protected_flag = 0
-    OR IS_MEMBER('fabric-supervisors') = 1;
+    OR IS_MEMBER('aht-fabric-admins') = 1
+    OR IS_MEMBER('aht-supervisors') = 1;
 GO
 
 CREATE SECURITY POLICY sec.CaseAccessSecurityPolicy

@@ -575,6 +575,14 @@ BEGIN
   SET NOCOUNT ON;
 
   DECLARE @LoadStartedAt datetime2(3) = SYSUTCDATETIME();
+  DECLARE @SecurityPolicyExists bit = CASE
+    WHEN EXISTS (
+      SELECT 1
+      FROM sys.security_policies
+      WHERE name = N'CaseAccessSecurityPolicy'
+    ) THEN 1
+    ELSE 0
+  END;
 
   INSERT INTO etl.load_run (
     pipeline_name,
@@ -590,9 +598,19 @@ BEGIN
   );
 
   BEGIN TRY
+    IF @SecurityPolicyExists = 1
+    BEGIN
+      ALTER SECURITY POLICY sec.CaseAccessSecurityPolicy WITH (STATE = OFF);
+    END;
+
     EXEC etl.usp_load_reference_dimensions;
     EXEC etl.usp_load_conformed_dimensions;
     EXEC etl.usp_load_fact_tables;
+
+    IF @SecurityPolicyExists = 1
+    BEGIN
+      ALTER SECURITY POLICY sec.CaseAccessSecurityPolicy WITH (STATE = ON);
+    END;
 
     UPDATE etl.load_run
     SET
@@ -603,6 +621,13 @@ BEGIN
       AND pipeline_name = 'warehouse_full_refresh';
   END TRY
   BEGIN CATCH
+    IF @SecurityPolicyExists = 1
+    BEGIN TRY
+      ALTER SECURITY POLICY sec.CaseAccessSecurityPolicy WITH (STATE = ON);
+    END TRY
+    BEGIN CATCH
+    END CATCH;
+
     UPDATE etl.load_run
     SET
       completed_at_utc = SYSUTCDATETIME(),
