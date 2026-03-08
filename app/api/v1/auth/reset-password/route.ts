@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resetPasswordWithToken } from "@/lib/authStore";
-import { mockDb } from "@/lib/mockDb";
+import { getDataStore } from "@/lib/data-store";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json() as { token?: string; password?: string };
-    resetPasswordWithToken(mockDb, {
+    await getDataStore().resetPassword({
       token: body.token ?? "",
       password: body.password ?? "",
     });

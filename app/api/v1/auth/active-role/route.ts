@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { switchSessionRole } from "@/lib/authStore";
-import { mockDb } from "@/lib/mockDb";
+import { getDataStore } from "@/lib/data-store";
 import type { UserRole } from "@/lib/types";
 
 export async function POST(request: NextRequest) {
@@ -10,7 +9,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "Token and role are required." }, { status: 400 });
     }
 
-    const context = switchSessionRole(mockDb, body.token, body.role);
+    const context = await getDataStore().switchRole(body.token, body.role);
     return NextResponse.json({ user: context });
   } catch (error) {
     return NextResponse.json({ message: (error as Error).message }, { status: 400 });

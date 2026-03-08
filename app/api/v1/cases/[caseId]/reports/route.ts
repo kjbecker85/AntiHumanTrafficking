@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { mockDb } from "@/lib/mockDb";
+import { getDataStore } from "@/lib/data-store";
 
 export async function GET(
   _request: Request,
   context: { params: Promise<{ caseId: string }> },
 ) {
   const { caseId } = await context.params;
-  return NextResponse.json(mockDb.reports.filter((r) => r.caseId === caseId));
+  return NextResponse.json(await getDataStore().listReports(caseId));
 }

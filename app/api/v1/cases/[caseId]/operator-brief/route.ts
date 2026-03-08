@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getDataStore } from "@/lib/data-store";
 import { buildOperatorAiBrief } from "@/lib/operatorAi";
 import type { UserRole } from "@/lib/types";
 
@@ -16,7 +17,7 @@ export async function GET(
       ? roleParam
       : "operator";
   const windowHours = Number.isFinite(windowHoursParam) ? Math.max(4, Math.min(240, windowHoursParam)) : 48;
+  const bundle = await getDataStore().getOperatorCaseBundle(caseId);
 
-  return NextResponse.json(buildOperatorAiBrief(caseId, role, windowHours));
+  return NextResponse.json(buildOperatorAiBrief(caseId, role, windowHours, bundle));
 }
-

@@ -1,6 +1,5 @@
 import { maskEntityName, strengthToWeight } from "@/lib/auth";
-import { mockDb } from "@/lib/mockDb";
-import type { Entity, OperatorAiBrief, ReportRecord, UserRole } from "@/lib/types";
+import type { Entity, OperatorAiBrief, Relationship, ReportRecord, UserRole } from "@/lib/types";
 
 function asHoursFromNow(isoTime: string, nowMs: number): number {
   const diffMs = nowMs - new Date(isoTime).getTime();
@@ -15,12 +14,21 @@ function scoreEntity(entity: Entity, reports: ReportRecord[], nowMs: number): nu
   return entity.confidence * 0.55 + reportCountScore * 0.25 + recencyScore * 0.2;
 }
 
-export function buildOperatorAiBrief(caseId: string, role: UserRole, windowHours: number): OperatorAiBrief {
+export function buildOperatorAiBrief(
+  caseId: string,
+  role: UserRole,
+  windowHours: number,
+  input: {
+    entities: Entity[];
+    relationships: Relationship[];
+    reports: ReportRecord[];
+  },
+): OperatorAiBrief {
   const now = new Date();
   const nowMs = now.getTime();
-  const entities = mockDb.entities.filter((entity) => entity.caseId === caseId);
-  const relationships = mockDb.relationships.filter((relationship) => relationship.caseId === caseId);
-  const reports = [...mockDb.reports]
+  const entities = input.entities.filter((entity) => entity.caseId === caseId);
+  const relationships = input.relationships.filter((relationship) => relationship.caseId === caseId);
+  const reports = [...input.reports]
     .filter((report) => report.caseId === caseId)
     .sort((a, b) => (a.timeObserved < b.timeObserved ? 1 : -1));
 
@@ -125,4 +133,3 @@ export function buildOperatorAiBrief(caseId: string, role: UserRole, windowHours
     ],
   };
 }
-

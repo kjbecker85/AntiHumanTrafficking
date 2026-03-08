@@ -1,0 +1,46 @@
+{
+  "tenantId": "dd05e198-794e-4f9f-a7c9-b7a16d3d5946",
+  "subscriptionId": "f7c16820-d87c-4f06-9ff9-228db7f03343",
+  "azureRegion": "eastus2",
+  "capacity": {
+    "id": "B40DD9AA-A345-4F01-8A63-2D7DA9A15724",
+    "sku": "FTL64",
+    "region": "Central US"
+  },
+  "workspaces": {
+    "development": {
+      "name": "HumanTrafficking-Development",
+      "id": "d1ec479c-b425-4418-a844-3df6cf3ad61e"
+    },
+    "test": {
+      "name": "HumanTrafficking-Test",
+      "id": "251f2c11-ec6f-498e-ac8a-74a2d165312e"
+    },
+    "production": {
+      "name": "HumanTrafficking-Production",
+      "id": "f188f406-7c8d-4810-afc4-9581226f5e7b"
+    }
+  },
+  "securityGroups": {
+    "fabricAdmins": {
+      "name": "aht-fabric-admins",
+      "objectId": "0495d4f1-489e-4cdb-a917-af1db9986a8a"
+    },
+    "analysts": {
+      "name": "aht-analysts",
+      "objectId": "2ed53ad1-df52-4f2b-b5f1-eae3568f4c00"
+    },
+    "operators": {
+      "name": "aht-operators",
+      "objectId": "6a42ce0a-599a-4d7b-9884-22ec75c36480"
+    },
+    "supervisors": {
+      "name": "aht-supervisors",
+      "objectId": "d5cb0d2b-8bb0-411e-8254-c160255e35cc"
+    },
+    "externalPartners": {
+      "name": "aht-external-partners",
+      "objectId": "14a82b56-fda6-4881-b9c4-02d4ae808797"
+    }
+  }
+}

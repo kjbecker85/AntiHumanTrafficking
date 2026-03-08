@@ -1,21 +1,14 @@
 import { NextResponse } from "next/server";
-import { mockDb, mockDbPersistence } from "@/lib/mockDb";
+import { getDataStore } from "@/lib/data-store";
 
 export async function GET() {
+  const health = await getDataStore().getHealth();
   return NextResponse.json({
     status: "ok",
     timestamp: new Date().toISOString(),
     uptimeSeconds: Math.round(process.uptime()),
-    persistence: {
-      enabled: mockDbPersistence.enabled,
-      filePath: mockDbPersistence.filePath,
-    },
-    counts: {
-      cases: mockDb.cases.length,
-      entities: mockDb.entities.length,
-      relationships: mockDb.relationships.length,
-      reports: mockDb.reports.length,
-      auditEvents: mockDb.auditEvents.length,
-    },
+    backend: health.backend,
+    persistence: health.persistence,
+    counts: health.counts,
   });
 }

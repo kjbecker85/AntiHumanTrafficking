@@ -38,6 +38,7 @@
     "framer-motion": "^12.35.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.577.0",
+    "mssql": "^11.0.1",
     "next": "15.2.0",
     "pixi-viewport": "^6.0.3",
     "pixi.js": "^8.16.0",
@@ -50,6 +51,7 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@types/mssql": "^9.1.8",
     "@types/node": "^22.13.9",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",

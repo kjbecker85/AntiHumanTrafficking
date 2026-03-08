@@ -12,6 +12,10 @@ This app is a frontend-first prototype for anti-trafficking case support using s
 - Demo data for cases, entities, relationships, reports, attachments, and audit events.
 4. `app/api/v1/*`
 - Mock backend endpoints matching phase-1 API contracts.
+5. `lib/data-store/*`
+- Runtime persistence layer that now selects Azure SQL or mock persistence.
+6. `docs/data-platform.md`
+- Azure SQL, Microsoft Fabric, and Bicep implementation guide.
 
 ## How pages map to user workflow
 1. `app/cases/page.tsx`
@@ -38,6 +42,10 @@ This app is a frontend-first prototype for anti-trafficking case support using s
 - Role-based masking functions and access helpers.
 3. `lib/api.ts`
 - Typed API client wrappers for page usage.
+4. `database/azure-sql/*`
+- Operational database schema and reference-data migrations.
+5. `database/fabric/warehouse/*`
+- Kimball-style warehouse DDL and Fabric security scripts.
 
 ## Next learning step
-Read `app/link-analysis/page.tsx` top-to-bottom while cross-checking `components/GraphCanvas.tsx`.
+Read `lib/data-store/index.ts`, then `lib/data-store/sqlStore.ts`, then `docs/data-platform.md` before diving back into `app/link-analysis/page.tsx`.

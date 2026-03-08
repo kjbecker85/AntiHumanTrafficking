@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { patchRelationship } from "@/lib/mockDb";
+import { getDataStore } from "@/lib/data-store";
 import type { Relationship } from "@/lib/types";
 
 export async function PATCH(
@@ -8,7 +8,7 @@ export async function PATCH(
 ) {
   const { relationshipId } = await context.params;
   const payload = (await request.json()) as Partial<Pick<Relationship, "strength" | "confidence" | "label" | "type">>;
-  const updated = patchRelationship(relationshipId, payload);
+  const updated = await getDataStore().updateRelationship(relationshipId, payload);
 
   if (!updated) {
     return NextResponse.json({ error: "relationship not found" }, { status: 404 });

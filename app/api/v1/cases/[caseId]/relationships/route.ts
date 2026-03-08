@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { addRelationship, mockDb } from "@/lib/mockDb";
+import { getDataStore } from "@/lib/data-store";
 import type { Relationship } from "@/lib/types";
 
 export async function GET(
@@ -7,7 +7,7 @@ export async function GET(
   context: { params: Promise<{ caseId: string }> },
 ) {
   const { caseId } = await context.params;
-  return NextResponse.json(mockDb.relationships.filter((r) => r.caseId === caseId));
+  return NextResponse.json(await getDataStore().listRelationships(caseId));
 }
 
 export async function POST(
@@ -16,9 +16,6 @@ export async function POST(
 ) {
   const { caseId } = await context.params;
   const payload = (await request.json()) as Omit<Relationship, "id" | "caseId">;
-  const created = addRelationship({
-    ...payload,
-    caseId,
-  });
+  const created = await getDataStore().createRelationship(caseId, payload);
   return NextResponse.json(created, { status: 201 });
 }

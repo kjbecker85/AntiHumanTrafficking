@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { loginWithPassword } from "@/lib/authStore";
-import { mockDb } from "@/lib/mockDb";
+import { getDataStore } from "@/lib/data-store";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json() as { email?: string; password?: string };
-    const result = loginWithPassword(mockDb, {
+    const result = await getDataStore().login({
       email: body.email ?? "",
       password: body.password ?? "",
     });
 
     return NextResponse.json({
-      token: result.session.token,
-      user: result.context,
+      token: result.token,
+      user: result.user,
     });
   } catch (error) {
     return NextResponse.json({ message: (error as Error).message }, { status: 401 });

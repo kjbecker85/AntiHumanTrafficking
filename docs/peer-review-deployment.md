@@ -1,14 +1,19 @@
 # Peer Review Deployment
 
-This app is set up to deploy as a single-instance Docker web service.
+This app now supports two persistence modes:
+
+- `mock`: file-backed demo persistence for local or lightweight review
+- `azure-sql`: Azure SQL operational persistence with Fabric warehouse assets in-repo
 
 ## Recommended target
 
-Use Render with the included `render.yaml`.
+For quick UI review, use Render with the included `render.yaml`.
+
+For the intended production path, use Azure App Service or Azure Container Apps with the Azure SQL and Fabric assets in `infra/bicep`, `database/azure-sql`, and `database/fabric/warehouse`.
 
 Why this target:
 
-- The app currently uses a mock API data store.
+- The app can still run in mock mode without cloud resources.
 - For peer review, a single long-lived container is more reliable than a serverless deployment.
 - The included persistent disk path keeps demo edits after restarts and redeploys.
 
@@ -16,7 +21,9 @@ Why this target:
 
 - Docker build: `Dockerfile`
 - Health endpoint: `app/api/health/route.ts`
-- Persistent demo data: `lib/mockDb.ts`
+- Persistence selector: `lib/data-store/index.ts`
+- Azure SQL runtime store: `lib/data-store/sqlStore.ts`
+- Azure SQL + Fabric deployment assets: `docs/data-platform.md`
 
 ## Launch steps
 
@@ -31,4 +38,4 @@ Why this target:
 
 Keep this deployment at one instance.
 
-The current mock database is file-backed for demos, not a shared transactional database. Scaling beyond one instance can split state between containers.
+If `DATA_BACKEND=mock`, the fallback store is still file-backed for demos. Scaling that mode beyond one instance can split state between containers. Use Azure SQL mode for shared transactional persistence.

@@ -1,13 +1,13 @@
 ﻿import { NextResponse } from "next/server";
-import { addCase, mockDb } from "@/lib/mockDb";
+import { getDataStore } from "@/lib/data-store";
 import type { CaseRecord } from "@/lib/types";
 
 export async function GET() {
-  return NextResponse.json(mockDb.cases);
+  return NextResponse.json(await getDataStore().listCases());
 }
 
 export async function POST(request: Request) {
   const payload = (await request.json()) as Omit<CaseRecord, "id">;
-  const created = addCase(payload);
+  const created = await getDataStore().createCase(payload);
   return NextResponse.json(created, { status: 201 });
 }
