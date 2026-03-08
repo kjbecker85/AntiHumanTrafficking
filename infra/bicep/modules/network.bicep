@@ -4,6 +4,7 @@ param environmentName string
 param vnetAddressPrefixes array
 param appSubnetPrefix string
 param privateEndpointSubnetPrefix string
+param gatewaySubnetPrefix string
 
 var vnetName = '${namePrefix}-${environmentName}-vnet'
 var sqlPrivateDnsZoneName = 'privatelink.database.windows.net'
@@ -28,6 +29,21 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
         name: 'private-endpoints'
         properties: {
           addressPrefix: privateEndpointSubnetPrefix
+          privateEndpointNetworkPolicies: 'Disabled'
+        }
+      }
+      {
+        name: 'fabric-gateway'
+        properties: {
+          addressPrefix: gatewaySubnetPrefix
+          delegations: [
+            {
+              name: 'fabricGatewayDelegation'
+              properties: {
+                serviceName: 'Microsoft.PowerPlatform/vnetaccesslinks'
+              }
+            }
+          ]
           privateEndpointNetworkPolicies: 'Disabled'
         }
       }
@@ -72,5 +88,6 @@ resource keyVaultPrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNe
 output vnetId string = vnet.id
 output appSubnetId string = '${vnet.id}/subnets/app'
 output privateEndpointSubnetId string = '${vnet.id}/subnets/private-endpoints'
+output gatewaySubnetId string = '${vnet.id}/subnets/fabric-gateway'
 output sqlPrivateDnsZoneId string = sqlPrivateDnsZone.id
 output keyVaultPrivateDnsZoneId string = keyVaultPrivateDnsZone.id

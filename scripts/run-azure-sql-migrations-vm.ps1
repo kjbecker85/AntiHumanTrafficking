@@ -47,7 +47,7 @@ foreach ($file in $MigrationFiles) {
   }
 }
 
-$payloadJson = $migrationPayload | ConvertTo-Json -Compress
+$payloadJson = @($migrationPayload) | ConvertTo-Json -Compress -AsArray
 $payloadBase64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($payloadJson))
 
 $remoteScript = @"
@@ -76,6 +76,8 @@ import json
 from pathlib import Path
 
 payload = json.loads(Path("/tmp/aht-migrations/payload.json").read_text())
+if isinstance(payload, dict):
+    payload = [payload]
 for item in payload:
     Path("/tmp/aht-migrations", item["Name"]).write_bytes(base64.b64decode(item["Base64"]))
 PY
@@ -85,12 +87,16 @@ import certifi
 from pathlib import Path
 import pytds
 import re
+import json
 
 server = "$SqlServerName.database.windows.net"
 database = "$DatabaseName"
 user = "$SqlAdminLogin"
 password = "$SqlAdminPassword"
 migration_dir = Path("/tmp/aht-migrations")
+payload = json.loads(Path("/tmp/aht-migrations/payload.json").read_text())
+if isinstance(payload, dict):
+    payload = [payload]
 
 def split_batches(text: str):
     return [batch.strip() for batch in re.split(r"(?im)^\s*GO\s*$", text) if batch.strip()]
@@ -107,7 +113,8 @@ with pytds.connect(
     autocommit=True,
 ) as conn:
     with conn.cursor() as cur:
-        for sql_file in sorted(migration_dir.glob("*.sql")):
+        for item in payload:
+            sql_file = migration_dir / item["Name"]
             print(f"Applying {sql_file.name}")
             sql_text = sql_file.read_text(encoding="utf-8")
             batches = split_batches(sql_text)

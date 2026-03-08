@@ -7,7 +7,19 @@ param(
 
   [string]$SchemaFile = "database/fabric/warehouse/001_star_schema.sql",
 
-  [string]$SecurityFile = "database/fabric/warehouse/002_security.sql"
+  [string]$SecurityFile = "database/fabric/warehouse/002_security.sql",
+
+  [string]$LoadFrameworkFile = "database/fabric/warehouse/003_load_framework.sql",
+
+  [string]$LoadProceduresFile = "database/fabric/warehouse/004_load_procedures.sql",
+
+  [string]$DevelopmentOperationalMirrorDatabaseName = "",
+
+  [string]$TestOperationalMirrorDatabaseName = "",
+
+  [string]$ProductionOperationalMirrorDatabaseName = "",
+
+  [switch]$RunRefreshProcedure
 )
 
 $ErrorActionPreference = "Stop"
@@ -102,14 +114,33 @@ if (-not (Test-Path -Path $SecurityFile -PathType Leaf)) {
   throw "Security file '$SecurityFile' was not found."
 }
 
+$loadFiles = @($LoadFrameworkFile, $LoadProceduresFile)
+foreach ($loadFile in $loadFiles) {
+  if (-not (Test-Path -Path $loadFile -PathType Leaf)) {
+    throw "Load file '$loadFile' was not found."
+  }
+}
+
 $workspaceConfig = Get-Content -Path $WorkspaceConfigPath -Raw | ConvertFrom-Json
 $fabricHeaders = Get-FabricHeaders
 $sqlToken = Get-AzAccessToken -Resource "https://database.windows.net/"
 
 $targets = @(
-  [PSCustomObject]@{ Name = "Development"; WorkspaceId = $workspaceConfig.workspaces.development.id },
-  [PSCustomObject]@{ Name = "Test"; WorkspaceId = $workspaceConfig.workspaces.test.id },
-  [PSCustomObject]@{ Name = "Production"; WorkspaceId = $workspaceConfig.workspaces.production.id }
+  [PSCustomObject]@{
+    Name = "Development"
+    WorkspaceId = $workspaceConfig.workspaces.development.id
+    OperationalMirrorDatabaseName = $DevelopmentOperationalMirrorDatabaseName
+  },
+  [PSCustomObject]@{
+    Name = "Test"
+    WorkspaceId = $workspaceConfig.workspaces.test.id
+    OperationalMirrorDatabaseName = $TestOperationalMirrorDatabaseName
+  },
+  [PSCustomObject]@{
+    Name = "Production"
+    WorkspaceId = $workspaceConfig.workspaces.production.id
+    OperationalMirrorDatabaseName = $ProductionOperationalMirrorDatabaseName
+  }
 )
 
 foreach ($target in $targets) {
@@ -137,11 +168,40 @@ foreach ($target in $targets) {
     -AccessToken $sqlToken `
     -InputFile $SecurityFile
 
+  if (-not [string]::IsNullOrWhiteSpace($target.OperationalMirrorDatabaseName)) {
+    Invoke-Sqlcmd `
+      -ServerInstance $server `
+      -Database $WarehouseName `
+      -AccessToken $sqlToken `
+      -InputFile $LoadFrameworkFile
+
+    Invoke-Sqlcmd `
+      -ServerInstance $server `
+      -Database $WarehouseName `
+      -AccessToken $sqlToken `
+      -InputFile $LoadProceduresFile `
+      -Variable "OperationalMirrorDatabaseName=$($target.OperationalMirrorDatabaseName)"
+
+    if ($RunRefreshProcedure.IsPresent) {
+      Invoke-Sqlcmd `
+        -ServerInstance $server `
+        -Database $WarehouseName `
+        -AccessToken $sqlToken `
+        -Query "EXEC etl.usp_refresh_warehouse;"
+    }
+  }
+
   $summary = Invoke-Sqlcmd `
     -ServerInstance $server `
     -Database $WarehouseName `
     -AccessToken $sqlToken `
-    -Query "SELECT DB_NAME() AS db_name, (SELECT COUNT(*) FROM sys.tables) AS table_count, (SELECT COUNT(*) FROM sys.security_policies) AS security_policy_count"
+    -Query @"
+SELECT
+  DB_NAME() AS db_name,
+  (SELECT COUNT(*) FROM sys.tables) AS table_count,
+  (SELECT COUNT(*) FROM sys.security_policies) AS security_policy_count,
+  (SELECT COUNT(*) FROM sys.procedures WHERE schema_id = SCHEMA_ID('etl')) AS etl_procedure_count
+"@
 
   $summary | Format-Table -AutoSize
 }

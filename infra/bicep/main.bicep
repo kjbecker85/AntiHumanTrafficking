@@ -52,6 +52,21 @@ param fabricAdminMembers array = []
 @description('Whether to create a new Fabric capacity in Azure. Set to false when using an existing trial or shared capacity.')
 param deployFabricCapacity bool = true
 
+@description('Whether to deploy a lightweight Linux VM inside the VNet for private migration and maintenance tasks.')
+param deployMigrationRunner bool = false
+
+@description('Name of the lightweight Linux VM used for private migration and maintenance tasks.')
+param migrationRunnerVmName string = '${namePrefix}-${environmentName}-runner'
+
+@description('Admin username for the migration runner VM.')
+param migrationRunnerAdminUsername string = 'ahtadmin'
+
+@description('SSH public key for the migration runner VM. Required when deployMigrationRunner is true.')
+param migrationRunnerAdminSshPublicKey string = ''
+
+@description('VM size for the migration runner.')
+param migrationRunnerVmSize string = 'Standard_B1s'
+
 @description('Virtual network CIDR blocks.')
 param vnetAddressPrefixes array = [
   '10.20.0.0/16'
@@ -62,6 +77,9 @@ param appSubnetPrefix string = '10.20.1.0/24'
 
 @description('Private endpoint subnet prefix.')
 param privateEndpointSubnetPrefix string = '10.20.2.0/24'
+
+@description('Fabric virtual network gateway subnet prefix.')
+param gatewaySubnetPrefix string = '10.20.3.0/24'
 
 var sqlServerName = empty(sqlServerNameOverride) ? toLower('${namePrefix}-${environmentName}-sql') : toLower(sqlServerNameOverride)
 var keyVaultBaseName = toLower('${namePrefix}${environmentName}')
@@ -85,6 +103,7 @@ module network './modules/network.bicep' = {
     vnetAddressPrefixes: vnetAddressPrefixes
     appSubnetPrefix: appSubnetPrefix
     privateEndpointSubnetPrefix: privateEndpointSubnetPrefix
+    gatewaySubnetPrefix: gatewaySubnetPrefix
   }
 }
 
@@ -126,7 +145,6 @@ module sql './modules/sql.bicep' = {
     privateEndpointSubnetId: network.outputs.privateEndpointSubnetId
     privateEndpointLocation: location
     sqlPrivateDnsZoneId: network.outputs.sqlPrivateDnsZoneId
-    userAssignedIdentityId: security.outputs.userAssignedIdentityId
     logAnalyticsWorkspaceId: observability.outputs.logAnalyticsWorkspaceId
   }
 }
@@ -142,9 +160,24 @@ module fabricCapacity './modules/fabric-capacity.bicep' = if (deployFabricCapaci
   }
 }
 
+module migrationRunner './modules/runner-vm.bicep' = if (deployMigrationRunner) {
+  name: 'migration-runner-${environmentName}'
+  scope: resourceGroup
+  params: {
+    location: location
+    vmName: migrationRunnerVmName
+    adminUsername: migrationRunnerAdminUsername
+    adminSshPublicKey: migrationRunnerAdminSshPublicKey
+    subnetId: network.outputs.appSubnetId
+    vmSize: migrationRunnerVmSize
+  }
+}
+
 output resourceGroupId string = resourceGroup.id
 output sqlServerName string = sql.outputs.sqlServerName
 output sqlDatabaseName string = sql.outputs.sqlDatabaseName
 output keyVaultUri string = security.outputs.keyVaultUri
 output userAssignedIdentityClientId string = security.outputs.userAssignedIdentityClientId
 output fabricCapacityResourceId string = deployFabricCapacity ? fabricCapacity!.outputs.fabricCapacityResourceId : ''
+output migrationRunnerVmName string = deployMigrationRunner ? migrationRunner!.outputs.vmName : ''
+output fabricGatewaySubnetId string = network.outputs.gatewaySubnetId

@@ -11,22 +11,17 @@ param sqlMaxSizeBytes int
 param privateEndpointSubnetId string
 param privateEndpointLocation string
 param sqlPrivateDnsZoneId string
-param userAssignedIdentityId string
 param logAnalyticsWorkspaceId string
 
 resource sqlServer 'Microsoft.Sql/servers@2023-08-01-preview' = {
   name: sqlServerName
   location: location
   identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${userAssignedIdentityId}': {}
-    }
+    type: 'SystemAssigned'
   }
   properties: {
     administratorLogin: sqlAdminLogin
     administratorLoginPassword: sqlAdminPassword
-    primaryUserAssignedIdentityId: userAssignedIdentityId
     publicNetworkAccess: 'Disabled'
     minimalTlsVersion: '1.2'
   }
