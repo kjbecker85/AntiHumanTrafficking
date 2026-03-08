@@ -26,6 +26,7 @@ This repository now contains the baseline application, Azure SQL operational sch
   - Subscription-scope entrypoint that creates the resource group and orchestrates all modules.
 - `infra/bicep/modules/*`
   - Network, security, observability, Azure SQL, and Fabric capacity resources.
+  - Includes an optional lightweight Linux runner VM module for private migration tasks.
 - `infra/bicep/parameters/*.bicepparam`
   - Environment-specific parameter files for `dev`, `test`, and `prod`.
 - `infra/fabric/workspaces.json`
@@ -36,8 +37,11 @@ This repository now contains the baseline application, Azure SQL operational sch
 2. Deploy Azure resources with `az deployment sub create --location <region> --template-file infra/bicep/main.bicep --parameters infra/bicep/parameters/dev.bicepparam`.
    - The current environment parameter files set `deployFabricCapacity = false` so Azure deploys the data platform foundation without creating a second Fabric capacity. This repo is currently bound to an existing Fabric trial capacity and pre-created workspaces.
 3. Execute the Azure SQL migration scripts against the provisioned database.
+   - If Azure SQL is private-only, run the migrations from a VM inside the VNet. The repo includes `scripts/run-azure-sql-migrations-vm.ps1` for that workflow.
 4. Run `scripts/deploy-fabric-items.ps1` to create the Fabric warehouse in the target workspaces.
 5. Apply the Fabric warehouse SQL scripts in order.
+   - The repo includes `scripts/publish-fabric-warehouse.ps1` to discover each warehouse SQL endpoint from the Fabric REST API, then publish `database/fabric/warehouse/001_star_schema.sql` and `database/fabric/warehouse/002_security.sql` using Microsoft Entra access tokens.
+   - The current warehouse scripts are intentionally written to match Fabric Warehouse SQL support, which is narrower than Azure SQL Database. In practice that means analytics tables are modeled with natural-key and surrogate-key columns, but this script does not attempt to enforce relational constraints that Fabric rejects during `CREATE TABLE`.
 6. Set application environment variables so the Next.js API routes use `DATA_BACKEND=azure-sql`.
 
 ## Notes
