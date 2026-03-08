@@ -5,6 +5,12 @@
     <DSP>Microsoft.Data.Tools.Schema.Sql.SqlDwUnifiedDatabaseSchemaProvider</DSP>
     <DefaultCollation>Latin1_General_100_BIN2_UTF8</DefaultCollation>
   </PropertyGroup>
+  <ItemGroup>
+    <Build Remove="Scripts\**\*.sql" />
+    <Build Remove="PostDeployment\**\*.sql" />
+    <None Include="Scripts\**\*.sql" />
+    <PostDeploy Include="PostDeployment\Script.PostDeployment.sql" />
+  </ItemGroup>
   <Target Name="BeforeBuild">
     <Delete Files="$(BaseIntermediateOutputPath)\project.assets.json" />
   </Target>
