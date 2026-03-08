@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Warehouse",
+    "displayName": "AntiHumanTraffickingWarehouse",
+    "description": "Kimball warehouse for anti-trafficking investigation analytics."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "0176eeff-64a0-9e53-4280-89f49cea94ba"
+  }
+}
